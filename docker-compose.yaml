@@ -51,7 +51,9 @@ services:
 
   ratelimit:
     build:
-      context: ratelimit
+      #context: ratelimit
+      context: .
+      dockerfile: Dockerfile-ratelimit
     command: /bin/ratelimit
     ports:
       - 8080:8080

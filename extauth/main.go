@@ -4,13 +4,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
+	corev3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	typev3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	"google.golang.org/genproto/googleapis/rpc/status"
 	"log"
 	"net"
 	"strings"
 
-	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
-	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
+	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	"github.com/gogo/googleapis/google/rpc"
 	"google.golang.org/grpc"
 )
@@ -36,14 +37,14 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 
 		if len(token) == 3 {
 			return &auth.CheckResponse{
-				Status: &rpc.Status{
+				Status: &status.Status{
 					Code: int32(rpc.OK),
 				},
 				HttpResponse: &auth.CheckResponse_OkResponse{
 					OkResponse: &auth.OkHttpResponse{
-						Headers: []*core.HeaderValueOption{
+						Headers: []*corev3.HeaderValueOption{
 							{
-								Header: &core.HeaderValue{
+								Header: &corev3.HeaderValue{
 									Key:   "x-ext-auth-ratelimit",
 									Value: tokenSha,
 								},
@@ -55,13 +56,13 @@ func (a *AuthorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 		}
 	}
 	return &auth.CheckResponse{
-		Status: &rpc.Status{
+		Status: &status.Status{
 			Code: int32(rpc.UNAUTHENTICATED),
 		},
 		HttpResponse: &auth.CheckResponse_DeniedResponse{
 			DeniedResponse: &auth.DeniedHttpResponse{
-				Status: &envoy_type.HttpStatus{
-					Code: envoy_type.StatusCode_Unauthorized,
+				Status: &typev3.HttpStatus{
+					Code: typev3.StatusCode_Unauthorized,
 				},
 				Body: "Need an Authorization Header with a 3 character bearer token! #secure",
 			},
